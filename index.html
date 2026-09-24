@@ -1,0 +1,63 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Underwood — Word Counter & Text Stats</title>
+<meta name="description" content="Word count, reading and speaking time, readability grade, and your most-used words for anything you write.">
+<meta property="og:title" content="Underwood">
+<meta property="og:description" content="Word count, reading and speaking time, readability grade, and your most-used words for anything you write.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://drew-traldi.github.io/writing-breakdown-underwood/">
+<meta name="twitter:card" content="summary">
+<meta name="author" content="Drew Traldi">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Ctext%20y%3D%27.9em%27%20font-size%3D%2790%27%3E%E2%9C%8D%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Cutive+Mono&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;background:#3d2b1f;background-image:radial-gradient(circle at 50% 0%,#6b4a33,#2a1c13 70%);font-family:'Special Elite',Courier,monospace;color:#2a2118;padding:30px 16px 60px}
+.machine{max-width:900px;margin:auto}
+.paper{background:#f8f3e6;padding:40px clamp(18px,5vw,60px);min-height:420px;box-shadow:0 20px 40px rgba(0,0,0,.5),inset 0 0 80px rgba(160,120,60,.18);position:relative;
+background-image:linear-gradient(90deg,transparent 58px,rgba(200,60,60,.35) 58px,rgba(200,60,60,.35) 60px,transparent 60px),repeating-linear-gradient(transparent 0 31px,rgba(80,120,180,.18) 31px 32px)}
+h1{font-size:28px;letter-spacing:3px;margin-bottom:6px;padding-left:40px}
+.sub{padding-left:40px;font-family:'Cutive Mono';margin-bottom:14px;font-size:14px}
+textarea{width:100%;min-height:340px;border:0;background:transparent;resize:vertical;outline:none;font:18px/32px 'Special Elite',monospace;color:#1d1711;padding-left:40px}
+.keys{background:linear-gradient(#222,#111);border-radius:0 0 30px 30px;padding:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px;box-shadow:0 10px 30px rgba(0,0,0,.6)}
+.k{background:radial-gradient(circle at 40% 30%,#fbf6e8,#d9cfb4);border:4px solid #555;border-radius:50%;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-shadow:0 6px 0 #000,inset 0 -4px 8px rgba(0,0,0,.2);transition:transform .1s}
+.k:hover{transform:translateY(3px);box-shadow:0 3px 0 #000}
+.k b{font-size:clamp(20px,3vw,28px)}.k span{font-size:11px;text-transform:uppercase;letter-spacing:1px}
+.extra{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.card{background:#f8f3e6;padding:18px;box-shadow:0 10px 20px rgba(0,0,0,.4);transform:rotate(-.6deg)}
+.card:nth-child(2){transform:rotate(.8deg)}
+.card h2{font-size:16px;letter-spacing:2px;border-bottom:1px dashed #2a2118;padding-bottom:6px;margin-bottom:8px}
+.card li{list-style:none;display:flex;justify-content:space-between;font-family:'Cutive Mono';padding:3px 0;font-size:14px}
+.card li i{flex:1;margin:0 8px;border-bottom:1px dotted #aaa;transform:translateY(-4px)}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0 40px}
+.tools button{font:13px 'Special Elite';background:#2a2118;color:#f8f3e6;border:0;padding:6px 10px;cursor:pointer}
+.lim{display:flex;align-items:center;gap:6px;font-family:'Cutive Mono';font-size:13px;margin-left:auto}
+.lim input{width:70px;font:13px 'Cutive Mono';background:transparent;border:0;border-bottom:1px solid #2a2118}
+.over{color:#b22}
+@media(max-width:640px){.extra{grid-template-columns:1fr}}
+</style></head><body>
+<div class="machine">
+<div class="paper"><h1>UNDERWOOD Nº5</h1><div class="sub">— type or paste. every keystroke counted. —</div>
+<textarea id="t" placeholder="It was a dark and stormy night..."></textarea>
+<div class="tools"><button data-a="upper">UPPER</button><button data-a="lower">lower</button><button data-a="title">Title Case</button><button data-a="sentence">Sentence case</button><button data-a="trim">Trim spaces</button><button data-a="clear">Clear</button>
+<span class="lim">Limit: <input id="limit" type="number" placeholder="none"> <span id="limo"></span></span></div></div>
+<div class="keys" id="keys"></div>
+<div class="extra"><div class="card"><h2>TOP WORDS</h2><ul id="top"></ul></div><div class="card"><h2>READABILITY</h2><ul id="read"></ul></div></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);const t=$('t');
+const STOP=new Set('the a an and or but of to in on at for with is it this that was were be are as by from i you he she we they his her their my your our not no so if then than too very can will just have has had do did does me him them us its'.split(' '));
+function syl(w){w=w.toLowerCase().replace(/[^a-z]/g,'');if(w.length<=3)return 1;w=w.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/,'').replace(/^y/,'');const m=w.match(/[aeiouy]{1,2}/g);return m?m.length:1}
+function stats(){const s=t.value;localStorage.uw=s;const words=s.match(/[A-Za-z0-9'’-]+/g)||[];const W=words.length;const sent=(s.match(/[^.!?]+[.!?]+/g)||[]).length||(W?1:0);const para=s.split(/\n\s*\n/).filter(p=>p.trim()).length;
+ const chars=s.length,nos=s.replace(/\s/g,'').length,sy=words.reduce((a,w)=>a+syl(w),0);
+ const K=[[W,'words'],[chars,'chars'],[nos,'no spaces'],[sent,'sentences'],[para,'paragraphs'],[Math.ceil(W/238)+'m','read time'],[Math.ceil(W/130)+'m','speak time'],[new Set(words.map(w=>w.toLowerCase())).size,'unique']];
+ $('keys').innerHTML=K.map(k=>`<div class="k"><b>${k[0].toLocaleString()}</b><span>${k[1]}</span></div>`).join('');
+ const f={};words.forEach(w=>{w=w.toLowerCase();if(!STOP.has(w)&&w.length>2)f[w]=(f[w]||0)+1});
+ $('top').innerHTML=Object.entries(f).sort((a,b)=>b[1]-a[1]).slice(0,7).map(([w,c])=>`<li><span>${w}</span><i></i><span>${c}× (${(c/W*100).toFixed(1)}%)</span></li>`).join('')||'<li>—</li>';
+ const fre=W&&sent?206.835-1.015*(W/sent)-84.6*(sy/W):0,fk=W&&sent?.39*(W/sent)+11.8*(sy/W)-15.59:0;
+ const lvl=fre>=90?'Very easy':fre>=70?'Easy':fre>=60?'Plain English':fre>=50?'Fairly hard':fre>=30?'Difficult':'Academic';
+ $('read').innerHTML=[['Flesch ease',W?fre.toFixed(0):'—'],['Level',W?lvl:'—'],['Grade',W?Math.max(0,fk).toFixed(1):'—'],['Avg words/sentence',sent?(W/sent).toFixed(1):'—'],['Avg word length',W?(words.join('').length/W).toFixed(1):'—'],['Longest word',words.reduce((a,b)=>b.length>a.length?b:a,'')||'—']].map(r=>`<li><span>${r[0]}</span><i></i><span>${r[1]}</span></li>`).join('');
+ const L=+$('limit').value;$('limo').textContent=L?`${W}/${L}`:'';$('limo').className=L&&W>L?'over':''}
+document.querySelectorAll('.tools button').forEach(b=>b.onclick=()=>{const a=b.dataset.a;let s=t.value;
+ if(a==='upper')s=s.toUpperCase();if(a==='lower')s=s.toLowerCase();if(a==='title')s=s.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());if(a==='sentence')s=s.toLowerCase().replace(/(^\s*\w|[.!?]\s+\w)/g,c=>c.toUpperCase());if(a==='trim')s=s.replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n').trim();if(a==='clear')s='';t.value=s;stats()});
+t.oninput=stats;$('limit').oninput=stats;t.value=localStorage.uw||'';stats();
+</script></body></html>
