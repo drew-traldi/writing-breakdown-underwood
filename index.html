@@ -34,6 +34,10 @@ textarea{width:100%;min-height:340px;border:0;background:transparent;resize:vert
 .lim input{width:70px;font:13px 'Cutive Mono';background:transparent;border:0;border-bottom:1px solid #2a2118}
 .over{color:#b22}
 @media(max-width:640px){.extra{grid-template-columns:1fr}}
+
+/* mobile: 16px fields stop iOS focus-zoom; roomier touch targets */
+@media (max-width:640px){input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=color]),select,textarea{font-size:16px!important}}
+@media (hover:none) and (pointer:coarse){button{min-height:40px}}
 </style></head><body>
 <div class="machine">
 <div class="paper"><h1>UNDERWOOD Nº5</h1><div class="sub">— type or paste. every keystroke counted. —</div>
